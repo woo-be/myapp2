@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.moyeo.dao.RecruitMemberDao">
+
+  <resultMap id="recruitMemberMap" type="recruitBoard">
+  <id column="recruit_board_id" property="recruitBoardId"/>
+  <result column="title" property="title"/>
+    <result column="current" property="current"/>
+    <result column="start_date" property="startDate"/>
+    <result column="end_date" property="endDate"/>
+    <result column="current" property="current"/>
+    <result column="recruit_total" property="recruitTotal"/>
+
+    <association property="writer" javaType="Member">
+    <id column="memberId" property="memberId"/>
+    <result column="nickname" property="nickname"/>
+    </association>
+  </resultMap>
+
+  <resultMap id="RecruitMemberMap" type="RecruitMember">
+    <id column="recruit_Board_id" property="recruitBoardId"/>
+    <id column="member_id" property="memberId"/>
+    <result column="state" property="state"/>
+    <result column="created_date" property="createdDate"/>
+
+    <association property="member" javaType="Member">
+      <id column="memberId" property="memberId"/>
+      <result column="nickname" property="nickname"/>
+      <result column="email" property="email"/>
+      <result column="birth_date" property="birthdate"/>
+      <result column="introduce" property="introduce"/>
+      <result column="gender" property="gender"/>
+    </association>
+
+  </resultMap>
+
+  <resultMap id="memberMap" type="RecruitMember">
+    <id column="member_id" property="memberId"/>
+    <result column="nickname" property="nickname"/>
+    <result column="photo" property="photo"/>
+  </resultMap>
+
+  <!--모집 신청하기-->
+  <insert id="add" parameterType="int">
+    insert
+    into
+      recruit_member(
+        recruit_board_id,
+        member_id)
+      values(
+        #{recruitBoardId},
+        #{memberId})
+  </insert>
+
+  <!--글 작성자를 recruit_member에 state=true로 추가-->
+  <insert id="addWriter" parameterType="int">
+    insert
+    into
+    recruit_member(
+      recruit_board_id,
+      member_id,
+      state)
+    values(
+      #{recruitBoardId},
+      #{memberId},
+      true)
+  </insert>
+
+
+  <select id="findAll" resultMap="recruitMemberMap" parameterType="int">
+    select
+    rb.recruit_board_id,
+    rb.title,
+    rb.start_date,
+    rb.end_date,
+    m.nickname,
+    current,
+    rb.recruit_total
+    from
+    recruit_board rb
+    inner join member m on rb.member_id = m.member_id
+    left join recruit_member rm on rb.recruit_board_id = rm.recruit_board_id
+    inner join (SELECT COUNT(*) as current, recruit_board_id FROM recruit_member where state=1 group by recruit_board_id) as cc on cc.recruit_board_id=rb.recruit_board_id
+    where
+    rm.member_id=#{memberId} and rm.state=1
+    group by
+    rb.recruit_board_id
+    order by
+    rb.recruit_board_id desc
+  </select>
+
+
+  <select id="findBy" resultMap="RecruitMemberMap">
+    select
+      *
+    from
+      recruit_member
+    where
+      member_id = #{memberId}
+    and
+      recruit_board_id = #{recruitBoardId}
+  </select>
+
+  <delete id="delete">
+    delete
+    from
+      recruit_member
+    where
+      member_id = #{memberId}
+    and
+      recruit_board_id = #{recruitBoardId}
+  </delete>
+
+  <!--recruit_member 테이블의 recruitBoardId가 boardId인 레코드 전부 삭제-->
+  <delete id="deleteAll">
+    delete
+    from
+      recruit_member
+    where
+      recruit_board_id = #{recruitBoardId}
+  </delete>
+
+  <select id="findAllApplicant" resultMap="RecruitMemberMap" parameterType="int">
+    select
+      rcm.member_id,
+      rcm.created_date,
+      m.nickname,
+      m.email,
+      m.birth_date,
+      m.introduce,
+      m.gender
+    from
+      recruit_board rcb
+      left outer join recruit_member rcm on rcb.recruit_board_id=rcm.recruit_board_id
+      inner join member m on rcm.member_id=m.member_id
+    where
+      rcb.recruit_board_id=#{recruitBoardId} and rcm.state is null
+  </select>
+
+  <update id="update" parameterType="recruitMember">
+    update recruit_member set
+      state=#{state}
+    where recruit_board_id=#{recruitBoardId} and member_id=#{memberId}
+  </update>
+
+  <select id="allApplicant" resultMap="memberMap">
+    select
+      m.member_id,
+      m.photo,
+      m.nickname
+    from
+      recruit_member rm
+      inner join member m on rm.member_id=m.member_id
+    where
+      recruit_board_id=#{recruitBoardId} and rm.state=1
+  </select>
+
+</mapper>

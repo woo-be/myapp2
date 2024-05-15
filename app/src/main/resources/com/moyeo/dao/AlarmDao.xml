@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.moyeo.dao.AlarmDao">
+  <resultMap id="AlarmMap" type="Alarm">
+    <id column="alarm_id" property="alarmId"/>
+    <result column="member_id" property="memberId"/>
+    <result column="content" property="content"/>
+    <result column="checked" property="checked"/>
+  </resultMap>
+
+
+<select id="findAll" parameterType="int" resultMap="AlarmMap">
+  select
+    alarm_id,
+    content,
+    checked
+  from
+    alarm
+  where
+    member_id=#{memberId}
+  order by
+   alarm_id desc
+</select>
+
+  <insert id="add" parameterType="Alarm"
+    useGeneratedKeys="true" keyColumn="alarm_id" keyProperty="alarmId">
+    insert into alarm(member_id, content) values(#{memberId}, #{content});
+  </insert>
+
+  <select id="getStatus" parameterType="int" resultType="boolean">
+    select
+      checked
+    from
+      alarm
+    where
+      alarm_id=#{alarmId}
+  </select>
+
+  <update id="statusUpdate" parameterType="int">
+    update alarm set
+      checked = 1
+    where
+      alarm_id=#{alarmId}
+  </update>
+
+  <delete id="delete" parameterType="int">
+    delete from alarm where alarm_id=#{alarmId}
+  </delete>
+
+  <select id="listAll" resultMap="AlarmMap">
+    select * from alarm
+  </select>
+
+  <update id="updateContent" parameterType="Alarm">
+    update alarm set
+      content=#{content}
+    where
+      alarm_id=#{alarmId}
+  </update>
+
+</mapper>

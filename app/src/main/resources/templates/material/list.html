@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>모여</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--  헤더, 푸터-->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+        crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+          crossorigin="anonymous"></script>
+  <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+
+  <!-- 폰트 적용-->
+  <link rel="stylesheet" href="/style/fontstyle.css">
+
+  <style>
+    .footer {
+      position: static;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+    }
+
+    .td {
+      white-space: nowrap;
+    }
+
+    .column-title {
+      width: 40%;
+      max-width: 40%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .column-present {
+      width: 10%;
+    }
+
+    .column-state {
+      width: 12%;
+    }
+
+    #container{
+      width: 65%;
+      margin-left:8%;
+      min-height: 660px;
+    }
+
+    #materialAddBtn{
+      width:8%;
+    }
+  </style>
+</head>
+<body>
+<div data-th-replace="header :: header">머리말</div>
+
+<div class="d-flex justify-content-center align-items-start w-100">
+
+  <div class="d-flex justify-content-end">
+    <div>
+      <div data-th-replace="recruitMember/menu :: list">메뉴</div>
+    </div>
+  </div>
+
+  <div id="container">
+    <div class="text-center fs-2 fw-bold pt-4 pb-3">준비물</div>
+    <table class="table table-hover">
+      <thead>
+      <tr>
+        <th class="col-4 text-center column-title block col-2 text-truncate">준비물</th>
+        <th class="col-1 text-center column-present">수량</th>
+        <th class="col-1 text-center column-state">상태</th>
+      </tr>
+      </thead>
+      <tr data-th-each="material : ${list}" data-th-object="${material}">
+        <td class="col-4 text-center column-title"><a data-th-text="*{name}" data-th-onclick="'viewMaterial(' + *{materialId} + ')'"></a></td>
+        <td class="col-1 text-center column-present" data-th-text="*{count}">1</td>
+        <td class="text-center">
+          <div class="avatar-group">
+            <span class="w-75 text-center column-state badge bg-warning"
+                  data-th-if="*{state == false}">준비중</span>
+            <span class="w-75 text-center column-state badge bg-secondary"
+                  data-th-if="*{state == true}">준비완료</span>
+          </div>
+        </td>
+      </tr>
+    </table>
+    <div class="d-flex justify-content-between">
+      <div class="w-50"></div>
+      <div class="w-50"></div>
+    <button id="materialAddBtn" class="btn btn-primary m-1">등록</button>
+    </div>
+  </div>
+
+</div>
+
+<div data-th-replace="footer :: footer">꼬리말</div>
+
+<!-- 저장 모달 창 -->
+<div id="addMaterialModal" class="modal fade" tabindex="-1" style="display:none" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">게시물 저장</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <label for="materialName" class="form-label">준비물</label>
+          <input type="text" class="form-control" id="materialName" placeholder="준비물 이름">
+        </div>
+        <div>
+          <label for="materialCount" class="form-label">수량</label>
+          <input type="number" class="form-control" id="materialCount" placeholder="1">
+        </div>
+        <div>
+          <label for="materialContent" class="form-label">준비물 내용</label>
+          <input type="text" class="form-control" id="materialContent" placeholder="내용">
+        </div>
+        <div>
+          <label for="materialState" class="form-label">상태</label>
+          <input type="checkbox" id="materialState">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+        <button type="button" class="btn btn-primary" id="addButton">저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 상세보기 모달 창 -->
+<div id="viewMaterialModal" class="modal fade" tabindex="-1" style="display:none" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">게시물 저장</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <input type="hidden" class="form-control" id="materialId">
+        </div>
+        <div>
+          <label for="viewMaterialName" class="form-label">준비물</label>
+          <input type="text" class="form-control" id="viewMaterialName" placeholder="게시물 내용을 입력하세요">
+        </div>
+        <div>
+          <label for="viewMaterialCount" class="form-label">수량</label>
+          <input type="text" class="form-control" id="viewMaterialCount" placeholder="게시물 제목을 입력하세요">
+        </div>
+        <div>
+          <label for="viewMaterialContent" class="form-label">게시물 내용</label>
+          <input type="text" class="form-control" id="viewMaterialContent" placeholder="게시물 내용을 입력하세요">
+        </div>
+        <div>
+          <label for="viewMaterialState" class="form-label">상태</label>
+          <input name='state' type="checkbox" id="viewMaterialState">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                id="viewDeleteButton">삭제</button>
+        <button type="button" class="btn btn-primary" id="updateButton">수정</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+<script>
+  var materialAddBtn = $('#materialAddBtn');
+  var addButton = $('#addButton');
+  var updateButton = $('#updateButton');
+  var viewDeleteButton = $('#viewDeleteButton');
+
+  // 새로운 준비물
+  var materialName = $('#materialName');
+  var materialCount = $('#materialCount');
+  var materialContent = $('#materialContent');
+  var materialState = $('#materialState');
+
+  // 상세보기 준비물
+  var materialId = $('#materialId');
+  var viewMaterialName = $('#viewMaterialName');
+  var viewMaterialCount = $('#viewMaterialCount');
+  var viewMaterialContent = $('#viewMaterialContent');
+  var viewMaterialState = $('#viewMaterialState');
+
+  // 등록 버튼
+  materialAddBtn.click(function() {
+    $('#addMaterialModal').modal('show');
+    materialName.val("");
+    materialCount.val("");
+    materialContent.val("");
+    // 체크 해제
+    materialState.prop('checked', false);
+  });
+
+  // 모달창에서 저장 버튼
+  addButton.click(function() {
+    let material = new FormData();
+    material.append("name", materialName.val());
+    material.append("count", materialCount.val());
+    material.append("content", materialContent.val());
+    material.append("state", materialState.prop('checked'));
+    material.append("recruitBoardId", [[${recruitBoardId}]]);
+
+    $('#addMaterialModal').modal('hide');
+    $.ajax({
+      url: '/material/add',
+      type: 'POST',
+      contentType: false,
+      processData: false,
+      data:material
+    }).done(function(url){
+      location.href = url;
+    })
+  });
+
+    // 준비물 이름 클릭 했을때 상세보기 모달창
+    function viewMaterial(id){
+      $('#viewMaterialModal').modal('show');
+      $.ajax({
+        url: '/material/view?materialId=' + id,
+        type: 'GET',
+        contentType: false,
+        processData: false
+      }).done(function(material){
+        materialId.val(material.materialId);
+        viewMaterialName.val(material.name);
+        viewMaterialCount.val(material.count);
+        viewMaterialContent.val(material.content);
+        console.log(material.state);
+        console.log(viewMaterialState.val());
+        viewMaterialState.prop("checked", material.state);
+      })
+    }
+
+  // 준비물 수정
+  updateButton.click(function() {
+    let updateMaterial = new FormData();
+    updateMaterial.append("materialId",materialId.val());
+    updateMaterial.append("name", viewMaterialName.val());
+    updateMaterial.append("count", viewMaterialCount.val());
+    updateMaterial.append("content", viewMaterialContent.val());
+    updateMaterial.append("state", viewMaterialState.prop('checked'));
+
+    $.ajax({
+      url: '/material/update',
+      type: 'POST',
+      contentType: false,
+      processData: false,
+      data:updateMaterial
+    }).done(function(url){
+      location.href = url;
+    })
+  });
+
+  // 준비물 삭제
+  viewDeleteButton.click(function() {
+    $.ajax({
+      url: '/material/delete?materialId=' + materialId.val() + '&recruitBoardId=' + [[${recruitBoardId}]],
+      type: 'GET',
+      contentType: false,
+      processData: false
+    }).done(function(url){
+      location.href = url;
+    })
+  });
+
+
+</script>
+
+</html>

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.moyeo.dao.MemberDao">
+
+  <resultMap id="MemberMap" type="Member">
+    <id column="member_id" property="memberId"/>
+    <result column="email" property="email"/>
+    <result column="password" property="password"/>
+    <result column="name" property="name"/>
+    <result column="nickname" property="nickname"/>
+    <result column="phone_number" property="phoneNumber"/>
+    <result column="birth_date" property="birthdate"/>
+    <result column="photo" property="photo"/>
+    <result column="gender" property="gender"/>
+    <result column="introduce" property="introduce"/>
+  </resultMap>
+
+  <!-- 회원 정보 저장 (회원가입) -->
+  <insert id="add" parameterType="Member">
+    insert into member(email, password, name, nickname, phone_number, birth_date, gender, introduce, photo)
+    values(#{email}, #{password}, #{name}, #{nickname}, #{phoneNumber}, #{birthdate}, #{gender}, #{introduce}, #{photo})
+  </insert>
+
+
+  <!-- 회원 정보 삭제 (회원탈퇴) -->
+  <delete id="delete" parameterType="Member">
+    update member set
+      email=#{email},
+      password=#{password},
+      name=#{name},
+      introduce=#{introduce},
+      photo=#{photo},
+      phone_number=#{phoneNumber},
+      birth_date=#{birthdate}
+    where
+      member_id=#{memberId}
+  </delete>
+
+
+  <!-- 회원 정보 수정 (회원수정) -->
+  <update id="update" parameterType="Member">
+    update member set
+    name=#{name},
+    nickname=#{nickname},
+    introduce=#{introduce},
+    photo=#{photo},
+    phone_number=#{phoneNumber}
+    where
+    member_id=#{memberId}
+  </update>
+
+
+  <!-- 회원 정보 가져오기 -->
+  <select id="findAll" resultMap="MemberMap">
+    select
+    member_id,
+    email,
+    name,
+    photo,
+    introduce
+    from
+    member
+  </select>
+
+
+  <!-- 회원 번호로 정보 가져오기 -->
+  <select id="findBy" resultMap="MemberMap" parameterType="int">
+    select
+    member_id,
+    email,
+    name,
+    photo,
+    introduce
+    from
+    member
+    where
+    member_id=#{value}
+  </select>
+
+
+  <!-- email, password로 회원 정보 가져오기 -->
+  <select id="findByEmailAndPassword" resultMap="MemberMap">
+    select
+    member_id,
+    email,
+    name,
+    nickname,
+    phone_number,
+    birth_date,
+    introduce,
+    photo
+    from
+    member
+    where
+    email= #{email}
+    and password=#{password}
+  </select>
+
+  <select id="findByEmail" resultMap="MemberMap">
+    select
+    member_id,
+    email
+    from
+    member
+    where
+    name=#{name}
+    and phone_number=#{phoneNumber}
+    and birth_date=#{birthdate}
+  </select>
+
+
+  <select id="matchPassword" resultMap="MemberMap">
+    select
+    *
+    from
+    member
+    where
+    email=#{email}
+    and name=#{name}
+    and phone_number=#{phoneNumber}
+    and birth_date=#{birthdate}
+  </select>
+
+
+  <update id="updatePassword" parameterType="Member">
+    update member
+    set
+    password = #{password}
+    where
+    email = #{email}
+    and name = #{name}
+    and phone_number = #{phoneNumber}
+    and birth_date = #{birthdate}
+  </update>
+
+  <select id="matchByEmail" resultMap="MemberMap" parameterType="string">
+    SELECT *
+    FROM
+    member
+    WHERE
+    email = #{email}
+  </select>
+
+  <!-- 스프링시큐리티로 로그인할때 email로 회원 정보 가져오기 -->
+  <select id="loginByEmail" resultMap="MemberMap">
+    select
+    member_id,
+    email,
+    name,
+    nickname,
+    phone_number,
+    password,
+    birth_date,
+    introduce,
+    photo
+    from
+    member
+    where
+    email= #{email}
+  </select>
+
+</mapper>

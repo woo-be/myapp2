@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.moyeo.dao.RecruitBoardDao">
+
+  <resultMap id="RecruitBoardMap" type="RecruitBoard">
+    <id column="recruit_board_id" property="recruitBoardId"/>
+    <result column="title" property="title"/>
+    <result column="content" property="content"/>
+    <result column="start_date" property="startDate"/>
+    <result column="end_date" property="endDate"/>
+    <result column="current" property="current"/>
+    <result column="recruit_total" property="recruitTotal"/>
+    <result column="deadline" property="deadline"/>
+    <result column="state" property="state"/>
+    <result column="created_date" property="createdDate"/>
+    <result column="latitude" property="latitude"/>
+    <result column="longitude" property="longitude"/>
+    <result column="views" property="views"/>
+    <result column="address" property="address"/>
+    <result column="waiting" property="waiting"/>
+    
+    <association property="writer" javaType="Member">
+      <id column="member_id" property="memberId"/>
+      <result column="nickname" property="nickname"/>
+    </association>
+
+    <association property="region" javaType="Region">
+      <id column="region_id" property="regionId"/>
+      <result column="region_name" property="regionName"/>
+    </association>
+
+    <association property="theme" javaType="Theme">
+      <id column="theme_id" property="themeId"/>
+      <result column="theme_name" property="themeName"/>
+    </association>
+    
+    <collection property="photos" ofType="RecruitPhoto">
+      <id column="recruit_photo_id" property="recruitPhotoId"/>
+      <result column="photo" property="photo"/>
+    </collection>
+
+    <collection property="applicants" ofType="RecruitMember">
+      <id column="a_id" property="memberId"/>
+        <result column="a_photo" property="photo"/>
+        <result column="a_nick" property="nickname"/>
+    </collection>
+  </resultMap>
+
+  <select id="findAll" resultMap="RecruitBoardMap">
+    select
+      rb.recruit_board_id,
+      rb.title,
+      m.nickname,
+      rb.views,
+      count(case when rm.state = 1 then 1 end) as current,
+      rb.recruit_total,
+      rb.state,
+      rb.created_date
+    from
+      recruit_board rb
+      inner join member m on rb.member_id = m.member_id
+      left join recruit_member rm on rb.recruit_board_id = rm.recruit_board_id
+    where
+      1 = 1
+    <if test="keyword != null and keyword != ''">
+      and ${filter} like concat('%',#{keyword},'%')
+    </if>
+    <if test="regionId > 0">
+      and rb.region_id=#{regionId}
+    </if>
+    <if test="themeId > 0">
+      and rb.theme_id=#{themeId}
+    </if>
+    group by
+      rb.recruit_board_id
+    order by
+      rb.recruit_board_id desc
+    limit #{rowCount} offset #{offset}
+  </select>
+
+  <select id="findByMemberId" resultMap="RecruitBoardMap" parameterType="int">
+    select
+      rb.recruit_board_id,
+      rb.title,
+      rb.deadline,
+      rb.state,
+      rb.recruit_total,
+      count(case when rm.state = 1 then 1 end) as current,
+      count(case when rm.state is null then 1 end) as waiting
+    from
+      recruit_board rb
+      inner join member m on m.member_id=rb.member_id
+      left outer join recruit_member rm on rb.recruit_board_id=rm.recruit_board_id
+    where
+      m.member_id=#{memberId}
+    group by
+      rb.recruit_board_id
+    order by rb.recruit_board_id desc
+    limit #{rowCount} offset #{offset}
+  </select>
+
+  <select id="findReqByMemberId" resultMap="RecruitBoardMap" parameterType="int">
+    select
+      rm.recruit_board_id,
+      rm.state,
+      rm.created_date,
+      rb.title,
+      rb.deadline
+    from
+      member m
+      inner join recruit_member rm on m.member_id=rm.member_id
+      inner join recruit_board rb on rb.recruit_board_id=rm.recruit_board_id
+    where
+      m.member_id=#{memberId}
+      and not rb.member_id=#{memberId}
+      order by rm.created_date desc
+      limit #{rowCount} offset #{offset}
+  </select>
+
+  <select id="findMyTeamByMemberId" resultMap="RecruitBoardMap" parameterType="int">
+    SELECT
+      rb.recruit_board_id,
+      rb.title,
+      rb.start_date,
+      rb.end_date,
+      r.region_name,
+      rp.photo
+    FROM
+      recruit_board rb
+      INNER JOIN region r ON r.region_id = rb.region_id
+      LEFT OUTER JOIN recruit_member rm ON rb.recruit_board_id = rm.recruit_board_id
+      LEFT OUTER JOIN recruit_photo rp ON rb.recruit_board_id = rp.recruit_id
+    WHERE
+      rm.state = 1
+      AND rm.member_id = #{memberId}
+  </select>
+
+  <select id="findBy" resultMap="RecruitBoardMap" parameterType="int">
+    select
+      rb.recruit_board_id,
+      rb.title,
+      reg.region_name,
+      rb.content,
+      rb.latitude,
+      rb.longitude,
+      rb.created_date,
+      rb.state,
+      rbp.recruit_photo_id,
+      rbp.photo,
+      rb.deadline,
+      rb.start_date,
+      rb.end_date,
+      rb.recruit_total,
+      rb.region_id,
+      rb.theme_id,
+      th.theme_name,
+      rb.member_id,
+      rb.views,
+      rb.address
+    from
+      recruit_board rb
+      left join region reg on rb.region_id=reg.region_id
+      left join recruit_photo rbp on rb.recruit_board_id=rbp.recruit_id
+      left join theme th on rb.theme_id = th.theme_id
+    where
+      rb.recruit_board_id = #{value}
+  </select>
+  
+  <delete id="delete" parameterType="int">
+    delete from recruit_board
+    where recruit_board_id = #{value};
+  </delete>
+
+  <select id="countAll" resultType="int">
+    select
+      count(*)
+    from
+      recruit_board rb
+      inner join member m on rb.member_id = m.member_id
+    where
+      1 = 1
+    <if test="keyword != null and keyword != ''">
+      and ${filter} like concat('%',#{keyword},'%')
+    </if>
+    <if test="regionId > 0">
+      and rb.region_id=#{regionId}
+    </if>
+    <if test="themeId > 0">
+      and rb.theme_id=#{themeId}
+    </if>
+  </select>
+
+  <select id="countAllMyPost" resultType="int">
+    select
+      count(*)
+    from
+      recruit_board rb
+    where
+      rb.member_id=#{memberId}
+  </select>
+
+  <select id="countAllMyReq" resultType="int">
+    select
+      count(*)
+    from
+      recruit_member rm
+      inner join recruit_board rb on rb.recruit_board_id=rm.recruit_board_id
+    where
+      rm.member_id=#{memberId}
+      and not rb.member_id=#{memberId}
+  </select>
+
+  <insert id="add" parameterType="recruitBoard"
+    useGeneratedKeys="true" keyColumn="recruit_board_id" keyProperty="recruitBoardId">
+    insert
+    into recruit_board(
+      member_id,
+      region_id,
+      theme_id,
+      title,
+      content,
+      start_date,
+      end_date,
+      recruit_total,
+      deadline,
+      latitude,
+      longitude,
+      address)
+    values(
+      #{writer.memberId},
+      #{region.regionId},
+      #{theme.themeId},
+      #{title},
+      #{content},
+      #{startDate},
+      #{endDate},
+      #{recruitTotal},
+      #{deadline},
+      #{latitude},
+      #{longitude},
+      #{address})
+  </insert>
+
+  <update id="update" parameterType="recruitBoard">
+    update recruit_board set
+      title=#{title},
+      state=#{state},
+      deadline=#{deadline},
+      start_date=#{startDate},
+      end_date=#{endDate},
+      recruit_total=#{recruitTotal},
+      region_id=#{region.regionId},
+      theme_id=#{theme.themeId},
+      content=#{content},
+      latitude=#{latitude},
+      longitude=#{longitude},
+      address=#{address}
+    where
+      recruit_board_id=#{recruitBoardId}
+  </update>
+
+  <!-- 조회수 증가 -->
+  <update id="plusViews" parameterType="int">
+    update
+      recruit_board
+    set
+      views = views + 1
+    where
+      recruit_board_id=#{value};
+  </update>
+
+  <select id="findByCurrent" resultMap="RecruitBoardMap">
+    select
+    rb.recruit_board_id,
+    rb.title,
+    m.nickname,
+    rb.views,
+    count(case when rm.state = 1 then 1 end) as current,
+    rb.recruit_total,
+    rb.state,
+    rb.created_date
+    from
+    recruit_board rb
+    inner join member m on rb.member_id = m.member_id
+    left join recruit_member rm on rb.recruit_board_id = rm.recruit_board_id
+    where
+    1 = 1
+    <if test="keyword != null and keyword != ''">
+      and ${filter} like concat('%',#{keyword},'%')
+    </if>
+    <if test="regionId > 0">
+      and rb.region_id=#{regionId}
+    </if>
+    <if test="themeId > 0">
+      and rb.theme_id=#{themeId}
+    </if>
+    and rb.state = 1
+    group by
+    rb.recruit_board_id
+    having
+    current != rb.recruit_total
+    order by
+    rb.recruit_board_id desc
+    limit #{rowCount} offset #{offset}
+  </select>
+
+  <select id="findByCurrentByLimit6" resultMap="RecruitBoardMap">
+    select
+    rb.recruit_board_id,
+    rb.title,
+    m.nickname, <!-- name => nickname 으로 변경 -->
+    rb.views,
+    count(case when rm.state = 1 then 1 end) as current,
+    rb.recruit_total,
+    rb.state,
+    rb.created_date,
+    rb.start_date,
+    rb.end_date,
+    t.theme_name,
+    a.member_id a_id,
+    a.nickname as a_nick,
+    a.photo as a_photo,
+    rb.recruit_total
+
+<!--    a.photo as p-->
+    from
+    recruit_board rb
+    inner join member m on rb.member_id = m.member_id
+    inner join theme t on rb.theme_id = t.theme_id
+    inner join recruit_member rm on rb.recruit_board_id = rm.recruit_board_id
+    inner join member a on rm.member_id = a.member_id
+    where
+    1 = 1
+    <if test="keyword != null and keyword != ''">
+      and ${filter} like concat('%',#{keyword},'%')
+    </if>
+    <if test="regionId > 0">
+      and rb.region_id=#{regionId}
+    </if>
+    <if test="themeId > 0">
+      and rb.theme_id=#{themeId}
+    </if>
+    and rb.state = 1
+    and rm.state = 1
+    group by
+    rb.recruit_board_id
+    having
+    current != rb.recruit_total
+    order by
+    rb.recruit_board_id desc
+    limit 6
+  </select>
+
+  <!-- 총 모집인원과 현재 모집인원을 찾음. -->
+  <select id="findCurrentAndTotalBy" resultMap="RecruitBoardMap" parameterType="int">
+    select
+      rcb.recruit_board_id,
+      recruit_total,
+      count(case when rcm.state = 1 then 1 end) as current
+    from
+      recruit_board rcb
+    left join recruit_member rcm on rcm.recruit_board_id = rcb.recruit_board_id
+    where
+      rcb.recruit_board_id=#{value}
+  </select>
+
+
+</mapper>

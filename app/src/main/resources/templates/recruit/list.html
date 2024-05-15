@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <title>모여</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- webjars BootStrap -->
+<!--  <link href="/webjars/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">-->
+<!--  <script src="/webjars/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>-->
+
+  <!-- Bootstrap core CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- JQuery -->
+  <script  src="http://code.jquery.com/jquery-latest.min.js"></script>
+
+  <!-- 폰트 적용-->
+  <link rel="stylesheet" href="/style/fontstyle.css">
+
+  <style>
+    aside #recruitTheme {
+      display:flex;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      width: 640px;
+      margin-right: 35px;
+    }
+    aside #recruitTheme li{
+      display:flex;
+      justify-content:center;
+
+      width: 80px;
+      border: 1px solid rgb(184, 184, 184) ;
+      padding: 3px 7px 3px 7px;
+      border-radius: 45px;
+      text-decoration-line: none;
+
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+    aside #recruitTheme li a{
+      font-size: 14px;
+    }
+    aside #recruitRegion li {
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    aside ul li a {
+      color: rgb(78, 78, 78);
+      text-decoration-line: none;
+    }
+    .column-no {
+      width: 6%;
+    }
+    .td {
+      white-space: nowrap;
+    }
+    .column-title {
+      /*text-align: center;*/
+      width: 40%;
+      max-width: 300px;
+      min-width: 40%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .column-writer {
+      width: 12%;
+    }
+    .column-present {
+      width: 10%;
+    }
+    .column-state {
+      width: 12%;
+    }
+    .column-createdDate {
+      width: 12%;
+    }
+    .column-hits {
+      width: 8%;
+    }
+    span {
+      white-space: nowrap;
+    }
+
+    #recruitRegionList{
+      width:10%;
+      min-width: 150px;
+      max-width: 150px;
+    }
+
+    /* 지역, 테마 활성화 클래스 */
+    a.active {
+      color: blue;
+      /*text-decoration: underline;*/
+    }
+    a {
+      color: rgb(78, 78, 78);
+      text-decoration-line: none;
+    }
+  </style>
+</head>
+<div data-th-replace="header :: header">머리말</div>
+<body class="container-fluid">
+
+  <!-- 컨텐트 -->
+  <div class="d-flex justify-content-center align-items-start py-3">
+
+    <!-- 지역 -->
+    <div id="recruitRegionList">
+      <div class="border mx-2">
+        <div data-th-replace="recruit/recruitRegion :: recruitRegionList">지역</div>
+      </div>
+    </div>
+
+    <!-- 게시판 -->
+    <div class="d-flex flex-column col-7 border p-2" style="min-width: 700px">
+
+      <h4 class="text-center fw-bold pt-4 pb-3">멤버 모집 게시판</h4>
+
+      <!-- 테마 -->
+      <div class="d-flex justify-content-center">
+        <div class="recruitThemeList" data-th-replace="recruit/recruitTheme :: recruitThemeList">테마</div>
+
+      </div>
+
+      <!-- 리스트 -->
+      <table class="table table-hover">
+        <thead>
+        <tr>
+          <th class="col-1 text-center column-no">번호</th>
+          <th class="col-4 text-center column-title block col-2 text-truncate">제목</th>
+          <th class="col-1 text-center column-writer">작성자</th>
+          <th class="col-1 text-center column-present">모집현황</th>
+          <th class="col-1 text-center column-state">모집상태</th>
+<!--          <th class="col-1 text-center column-createdDate">작성일자</th>-->
+          <th class="col-1 text-center column-hits">조회수</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr data-th-each="recruitboard : ${list}" data-th-object="${recruitboard}">
+          <td class="text-center column-no" data-th-text="*{recruitBoardId}">1</td>
+          <!--son, 04.09 , data-th-href를 viewCountUp으로 요청하게 끔 변경.-->
+          <!-- viewCountUp에서 조회수를 증가시키고 view페이지로 리다이렉트하게끔 함 -->
+          <td>
+            <a class="d-flex " data-th-href="@{viewCountUp(recruitBoardId=*{recruitBoardId})}" href="view.html">
+              <span class="column-title w-100" data-th-text="*{title}"></span>
+            </a>
+          </td>
+          <td class="text-center column-writer" data-th-text="*{writer.nickname}">홍길동</td>
+          <td class="text-center column-present" data-th-text="|*{current} / *{recruitTotal}|">1 / 4</td>
+          <td class="text-center">
+            <div class="avatar-group">
+              <span class="w-75 text-center column-state badge bg-warning" data-th-if="*{state == true}">모집중</span>
+              <span class="w-75 text-center column-state badge bg-secondary" data-th-if="*{state == false}">모집완료</span>
+            </div>
+          </td>
+<!--          <td class="text-center column-createdDate col-2 text-truncate" data-th-text="*{#dates.format(createdDate,'yyyy-MM-dd')}">2024-04-02</td>-->
+          <!--data-th-value => data-th-text -->
+          <td class="text-center column-hits" data-th-text="*{views}">12</td>
+        </tr>
+        </tbody>
+      </table>
+
+      <!-- 페이징 -->
+      <div class="d-flex justify-content-center py-3">
+        <nav aria-label="Page navigation">
+          <ul class="pagination">
+            <li class="page-item disabled" data-th-if="${pageNo <= 1}"><a
+                class="page-link">Previous</a></li>
+            <li class="page-item"><a class="page-link"
+                                     data-th-href="@{list(pageNo=${pageNo - 1},pageSize=${pageSize},regionId=${regionId},themeId=${themeId},filter=${filter}, keyword=${keyword})}"
+                                     data-th-if="${pageNo > 1}">Previous</a></li>
+            <!-- 반복(th-each)을 돌면서 페이지 버튼을 만듦. -->
+            <li class="page-item" data-th-each="pageButton : ${pageButtons}" data-th-id="page+${pageButton}"><a class="page-link"
+                href="#"
+                data-th-href="@{list(pageNo=${pageButton},pageSize=${pageSize},regionId=${regionId},themeId=${themeId},filter=${filter}, keyword=${keyword})}"
+                data-th-text="${pageButton}"></a>
+            </li>
+            <li data-th-if="${pageNo >= numOfPage}" class="page-item disabled"><a class="page-link">Next</a>
+            </li>
+            <li data-th-if="${pageNo < numOfPage}" class="page-item"><a class="page-link"
+                                                                        data-th-href="@{list(pageNo=${pageNo + 1},pageSize=${pageSize},regionId=${regionId},themeId=${themeId},filter=${filter}, keyword=${keyword})}">Next</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      <!-- 검색 및 글쓰기 -->
+      <div class="d-flex flex-row justify-content-between pb-3">
+        <div style="width: 50px"></div>
+        <div class="w-50">
+          <form method="get" action="list.html" data-th-action="@{list}">
+            <input type="hidden" name="regionId" data-th-value="${regionId}">
+            <input type="hidden" name="themeId" data-th-value="${themeId}">
+            <div class="d-flex flex-row">
+              <label for="filter"></label>
+              <select class="form-select w-25 m-1" name="filter" id="filter">
+                <option value="title">제목</option>
+                <option value="content">내용</option>
+                <option value="nickname">작성자</option>
+              </select>
+              <input class="form-control w-100 m-1" type="text" name="keyword" data-th-value="${keyword}">
+              <input type="submit" class="btn btn-primary m-1" data-th-value="검색">
+            </div>
+          </form>
+        </div>
+        <div>
+          <a class="btn btn-primary m-1 w-100" data-th-href="@{/recruit/addForm}" href="form">
+            <span>글쓰기</span>
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 우측 여백 -->
+    <div class="col-1">
+    </div>
+
+</div>
+
+<!-- 푸터 -->
+  <div>
+    <div class="row sticky-bottoms" data-th-replace="footer :: footer">꼬리말</div>
+  </div>
+</body>
+
+<!-- 부트스트랩 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- 검색 필터 기본값 설정 자바 스크립트 -->
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+  let dropdown = document.getElementById("filter");
+  let condition = "[[${filter}]]";
+
+  switch (condition) {
+    case "title":
+      dropdown.value = "title";
+      break;
+    case "content":
+      dropdown.value = "content";
+      break;
+    case "nickname":
+      dropdown.value = "nickname";
+      break;
+    default:
+      dropdown.value = "title";
+      break;
+  }
+});
+</script>
+
+<script>
+  $(document).ready(function() {
+
+    /* 현재 페이지에 해당하는 페이지 버튼을 찾아서 그 버튼의 클래스에 active를 추가,
+    현재 페이지가 어디인지 시각적으로 보이게 함. */
+    var link = document.getElementById("page[[${pageNo}]]");
+    console.log(link);
+    link.classList.add('active');
+  })
+</script>
+</html>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <title>모여</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="/webjars/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <script src="/webjars/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+  <!-- 네이버 지도 API -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+  <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=fjpvq7xa56&submodules=geocoder"></script>
+  <script  src="http://code.jquery.com/jquery-latest.min.js"></script>
+  <script type="text/javascript" src="http://code.jquery.com/jquery-2.2.4.min.js"></script>
+
+  <!-- include summernote css/js -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+
+  <!-- JSON -->
+  <script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.min.js"></script>
+
+  <!-- 폰트 적용-->
+  <link rel="stylesheet" href="/style/fontstyle.css">
+
+  <style>
+    body {
+      padding-left: 10px;
+    }
+    .form-item-div {
+      margin-top: 5px;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgb(206, 206, 206);
+    }
+    .form-item-div-name {
+      margin-left:20px;
+      margin-right:20px;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<div data-th-replace="header :: header">머리말</div>
+
+<body>
+<div class="d-flex container-fluid justify-content-center">
+  <div class="d-flex flex-column border border-2 w-75" style="min-width:900px">
+    <!-- 페이지 제목 -->
+    <div class="d-flex justify-content-center border-bottom border-2 pt-3 pb-3 mt-2 mb-4">
+      <h2>멤버 모집 글 수정</h2>
+    </div>
+    <!-- 가운데 정렬 -->
+    <div class="d-flex justify-content-center">
+      <div class="w-75 pt-4 pb-4 ps-5 pe-5">
+        <form action="update" data-th-action="@{update}" method="post" enctype='multipart/form-data' data-th-object="${board}">
+          <input id="recruitBoardId" type="hidden" name="recruitBoardId" data-th-value="*{recruitBoardId}">
+          <div class="form-item-div d-flex flex-row align-items-center pb-2">
+            <h6 class="form-item-div-name">제목</h6>
+            <input class="form-control w-50" id="title" name="title" type="text" data-th-value="*{title}">
+          </div>
+
+          <div class="form-item-div d-flex flex-row align-items-center pb-2">
+            <h6 class="form-item-div-name">상태</h6>
+            <input name="state" type="radio" data-th-checked="*{state == true}" value="true">
+            <span class="ms-1 me-2">모집중</span>
+            <input name="state" type="radio" data-th-checked="*{state == false}" value="false">
+            <span class="ms-1 me-2">마감</span>
+          </div>
+
+          <div class="form-item-div d-flex flex-row align-items-center">
+            <div class="d-flex flex-row align-items-center me-auto">
+              <h6 class="form-item-div-name">마감일</h6>
+              <input class="form-control w-75" id="deadline" name="deadline" type="date" data-th-value=*{deadline}>
+            </div>
+            <div class="d-flex flex-row align-items-center">
+              <h6 class="form-item-div-name">여행일자</h6>
+              <input class="form-control w-75" id="startDate" name="startDate" type="date" data-th-value=*{startDate}>
+              <span class="ms-2 me-2">~</span>
+              <input class="form-control w-75" style="margin-right:20px;" id="endDate" name="endDate" type="date" data-th-value=*{endDate}>
+            </div>
+          </div>
+          <div class="form-item-div d-flex flex-row align-items-center">
+            <h6 class="form-item-div-name">모집인원</h6>
+            <input class="form-control w-25" id="recruitTotal" name="recruitTotal" type="number" min="2" max="20" value="2" data-th-value="*{recruitTotal}">
+          </div>
+          <div class="form-item-div" data-th-replace="review/regionList :: regionList">지역리스트</div>
+          <div class="form-item-div" data-th-replace="review/themeList :: themeList">테마리스트</div>
+
+          <div class="form-item-div d-flex flex-row align-items-center">
+            <h6 class="form-item-div-name">주소</h6>
+            <div>
+              <div>
+                <input class="form-item-div form-control w-75" id="addr" type="text" name="address">
+                <input id="latitude" type="hidden" placeholder="검색한 위도" name="latitude">
+                <input id="longitude" type="hidden" placeholder="검색한 경도" name="longitude">
+              </div>
+              <div class="d-flex flex-row">
+                <input class="form-control w-75 me-3" id="address" type="text" placeholder="검색할 주소">
+                <input class="btn btn-primary" id="submit" type="button" value="주소 검색">
+              </div>
+              <div class="form-item-div" id="map" style="width:500px;height:400px;"></div>
+            </div>
+          </div>
+
+          <div class="form-input form-item-div d-flex flex-row align-items-center">
+            <h6 class="form-item-div-name">내용</h6>
+            <textarea id="summernote" name="content" data-th-text="*{content}"></textarea>
+          </div>
+
+<!--          data-th-onclick="'updateRecruit(' + *{recruitBoardId} + ')'"-->
+          <div class="d-flex flex-column">
+            <div class="d-flex justify-content-center">
+              <button id="updateBtn" type="button" class="btn btn-primary m-2">수정</button>
+              <a class="btn btn-primary m-2" data-th-href="@{view(recruitBoardId=*{recruitBoardId})}" type="button" href="view.html">취소</a>
+            </div>
+            <div class="d-flex justify-content-center">
+              <div>
+                <div id="title-error" class="invalid-feedback"></div>
+                <div id="deadline-error" class="invalid-feedback"></div>
+                <div id="startDate-error" class="invalid-feedback"></div>
+                <div id="endDate-error" class="invalid-feedback"></div>
+                <div id="region-error" class="invalid-feedback"></div>
+                <div id="theme-error" class="invalid-feedback"></div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // HTML 문서가 완전히 로드되었을 때 실행될 코드를 지정
+  $(document).ready(function() {
+
+    const deadlineInput = $('input[name="deadline"]')     // 마감일자
+    const startDateInput = $('input[name="startDate"]');  // 시작일자
+    const endDateInput = $('input[name="endDate"]');      // 종료일자
+
+    // 오늘 이전 날짜는 마감일자로 선택할 수 없음
+    // -> 입력 필드에 현재 날짜 이전을 선택하지 못하도록 하기
+    let offset = new Date().getTimezoneOffset() * 60000;  // 현재 타임존 오프셋(분)을 밀리초로 변환
+                                                          // 이때 getTimezoneOffset() 함수는 음수 반환함
+    let today = new Date(Date.now() - offset);        // UTC 시간에 타임존 오프셋을 더하여 현재 시간 계산
+    let minDate = today.toISOString().substring(0,10);// 날짜값 YYYY-MM-DD 형식으로 포맷
+    deadlineInput.prop('min', minDate); // min속성 설정 -> 오늘 이전날짜 선택 못하게 함
+
+    // 마감일자 선택시 시작일자/종료일자 min 설정 (마감일자 < 시작, 종료일자)
+    deadlineInput.on('change', function() {
+      // 선택한 날짜의 다음 날을 계산해서 YYYY-MM-DD 형식으로 포맷
+      let selectedDate = new Date($(this).val());
+      let nextDay = new Date(selectedDate.getTime() + (24 * 60 * 60 * 1000)); // 1000밀리초 기준 하루 계산
+      let nextDayFormatted = nextDay.toISOString().substring(0,10); // 다음 날짜를 YYYY-MM-DD 형식으로 포맷
+
+      startDateInput.prop('min', nextDayFormatted);
+      endDateInput.prop('min', nextDayFormatted);
+    });
+
+    // 시작일자 선택시 종료일자.min 설정 (시작일자 < 종료일자)
+    startDateInput.on('change', function() {
+      // 선택한 날짜의 이전 날짜를 계산해서 YYYY-MM-DD 형식으로 포맷
+      let selectedDate = new Date($(this).val());
+      let prevDay = new Date(selectedDate.getTime() - (24 * 60 * 60 * 1000)); // 1000밀리초 기준 하루 계산
+      let prevDayFormatted = prevDay.toISOString().substring(0,10); // 다음 날짜를 YYYY-MM-DD 형식으로 포맷
+
+      // 선택된 시작일의 값을 이용하여 종료일의 최소값(min 속성)을 설정
+      // this.value = 이벤트가 발생한 요소(시작일)의 값
+      endDateInput.prop('min', $(this).val());
+      deadlineInput.prop('max', prevDayFormatted);
+    });
+
+    // 종료일자 선택시 선택일자.max 설정 (시작일자 < 종료일자)
+    endDateInput.on('change', function() {
+      startDateInput.prop('max', $(this).val());
+    });
+  });
+</script>
+<script>
+  // summernote 설정
+  $(document).ready(function() {
+    $('#summernote').summernote({
+      height: 600,
+      width: 850,
+      callbacks: {
+        onImageUpload: function(files) {  // 사용자 지정 메서드
+
+          let data = new FormData();
+          for (const file of files) {
+            data.append("files", file);
+          }
+          $.ajax({
+            url: 'file/upload', // 절대경로: http://localhost:8888/recruit/file/upload
+            type: 'POST',
+            dataType: 'json',
+            contentType: false,
+            processData: false,
+            data: data
+          })
+          .done(function(result) {
+            if (result.length == 0) {
+              alert('로그인 하세요!');
+              return;
+            }
+
+            // 서버에서 받은 업로드 파일 이름을 가지고 <img> 태그를 설정한다.
+            for (const recruitPhoto of result.recruitPhotos) {
+              $('#summernote').summernote('insertImage',
+                'https://kr.object.ncloudstorage.com/moyeo-bucket/recruit/'
+                + recruitPhoto.photo);
+            }
+          });
+
+        }
+      }
+    });
+  });
+
+</script>
+<script>
+  <!-- 지도에서 검색 후 위도, 경도 가지고 오기-->
+
+    var map = new naver.maps.Map("map", {
+      center: new naver.maps.LatLng(37.3595316, 127.1052133),
+      zoom: 15,
+      mapTypeControl: true
+  });
+
+  var infoWindow = new naver.maps.InfoWindow({
+      anchorSkew: true,
+      maxWidth: 100
+  });
+
+  map.setCursor('pointer');
+
+  function searchCoordinateToAddress(latlng) {
+
+      infoWindow.close();
+
+      naver.maps.Service.reverseGeocode({
+          coords: latlng,
+          orders: [
+              naver.maps.Service.OrderType.ADDR,
+              naver.maps.Service.OrderType.ROAD_ADDR
+          ].join(',')
+      }, function(status, response) {
+          if (status === naver.maps.Service.Status.ERROR) {
+              return alert('Something Wrong!');
+          }
+
+          var items = response.v2.results,
+              address = '',
+              htmlAddresses = [];
+
+          for (var i=0, ii=items.length, item, addrType; i<ii; i++) {
+              item = items[i];
+              address = makeAddress(item) || '';
+              addrType = item.name === 'roadaddr' ? '[도로명 주소]' : '[지번 주소]';
+
+              htmlAddresses.push((i+1) +'. '+ addrType +' '+ address);
+          }
+
+          infoWindow.setContent([
+              '<div style="padding:10px;min-width:200px;line-height:150%;">',
+              '<h4 style="margin-top:5px;">검색 좌표</h4><br />',
+              htmlAddresses.join('<br />'),
+              '</div>'
+          ].join('\n'));
+
+          infoWindow.open(map, latlng);
+      });
+  }
+
+  function searchAddressToCoordinate(address) {
+    naver.maps.Service.geocode({
+        query: address
+    }, function(status, response) {
+        if (status === naver.maps.Service.Status.ERROR) {
+            return alert('Something Wrong!');
+        }
+
+        if (response.v2.meta.totalCount === 0) {
+            return alert("다시 입력해주세요!");
+        }
+
+        var htmlAddresses = [],
+            item = response.v2.addresses[0],
+            point = new naver.maps.Point(item.x, item.y);
+
+        document.getElementById("addr").value = item.roadAddress;
+        document.getElementById("latitude").value = item.y;
+        document.getElementById("longitude").value = item.x;
+
+
+        if (item.roadAddress) {
+            htmlAddresses.push('[도로명 주소] ' + item.roadAddress);
+        }
+
+        if (item.jibunAddress) {
+            htmlAddresses.push('[지번 주소] ' + item.jibunAddress);
+        }
+
+        if (item.englishAddress) {
+            htmlAddresses.push('[영문명 주소] ' + item.englishAddress);
+        }
+
+        infoWindow.setContent([
+            '<div style="padding:10px;min-width:350px;width:350px;line-height:150%;">',
+            '<h5 style="margin-top:5px;">검색 주소 : '+ address +'</h5><br />',
+            htmlAddresses.join('<br />'),
+            '</div>'
+        ].join('\n'));
+
+        map.setCenter(point);
+        infoWindow.open(map, point);
+    });
+}
+
+  function initGeocoder() {
+
+      searchAddressToCoordinate('[[${board.address}]]');
+
+      map.addListener('click', function(e) {
+        searchCoordinateToAddress(e.coord);
+    });
+
+    $('#address').on('keydown', function(e) {
+        var keyCode = e.which;
+
+        if (keyCode === 13) { // Enter Key
+            searchAddressToCoordinate($('#address').val());
+        }
+    });
+
+    $('#submit').on('click', function(e) {
+        e.preventDefault();
+
+        searchAddressToCoordinate($('#address').val());
+    });
+  }
+
+  function makeAddress(item) {
+      if (!item) {
+          return;
+      }
+
+      var name = item.name,
+          region = item.region,
+          land = item.land,
+          isRoadAddress = name === 'roadaddr';
+
+      var sido = '', sigugun = '', dongmyun = '', ri = '', rest = '';
+
+      if (hasArea(region.area1)) {
+          sido = region.area1.name;
+      }
+
+      if (hasArea(region.area2)) {
+          sigugun = region.area2.name;
+      }
+
+      if (hasArea(region.area3)) {
+          dongmyun = region.area3.name;
+      }
+
+      if (hasArea(region.area4)) {
+          ri = region.area4.name;
+      }
+
+      if (land) {
+          if (hasData(land.number1)) {
+              if (hasData(land.type) && land.type === '2') {
+                  rest += '산';
+              }
+
+              rest += land.number1;
+
+              if (hasData(land.number2)) {
+                  rest += ('-' + land.number2);
+              }
+          }
+
+          if (isRoadAddress === true) {
+              if (checkLastString(dongmyun, '면')) {
+                  ri = land.name;
+              } else {
+                  dongmyun = land.name;
+                  ri = '';
+              }
+
+              if (hasAddition(land.addition0)) {
+                  rest += ' ' + land.addition0.value;
+              }
+          }
+      }
+
+      return [sido, sigugun, dongmyun, ri, rest].join(' ');
+  }
+
+  function hasArea(area) {
+      return !!(area && area.name && area.name !== '');
+  }
+
+  function hasData(data) {
+      return !!(data && data !== '');
+  }
+
+  function checkLastString (word, lastString) {
+      return new RegExp(lastString + '$').test(word);
+  }
+
+  function hasAddition (addition) {
+      return !!(addition && addition.value);
+  }
+
+  naver.maps.onJSContentLoaded = initGeocoder;
+
+</script>
+
+<script>
+  /* 수정 버튼 클릭 시 호출되는 함수,
+  사용자의 확인/취소 여부에 따라 ajax를 사용하여 서버에게 요청함. */
+  var btn = document.getElementById("updateBtn");
+  var title = document.getElementById("title");
+  var startDate = document.getElementById("startDate");
+  var endDate = document.getElementById("endDate");
+  var deadline = document.getElementById("deadline");
+  var region = document.getElementById("regionId");
+  var theme = document.getElementById("themeId");
+
+  var titleError = document.getElementById("title-error");
+  var startDateError = document.getElementById("startDate-error");
+  var endDateError = document.getElementById("endDate-error");
+  var deadlineError = document.getElementById("deadline-error");
+  var regionError = document.getElementById("region-error");
+  var themeError = document.getElementById("theme-error");
+
+<!--제목, 마감일, 여행시작일, 여행종료일, 지역을 입력 받지 않았을 경우 처리.-->
+  function err(data, dataError, event, msg) {
+    if(data.value === '' || data.value == 0) {
+      dataError.innerHTML = msg;
+      dataError.style.display = "block";
+      event.preventDefault();
+      return 0;
+    }else {
+      dataError.innerHTML = ""; // 오류 메세지 지우기
+      dataError.style.display = "none"; // 오류 메세지 숨기기
+      return 1;
+    }
+  }
+
+  btn.addEventListener('click', function(event) {
+    let a = err(title, titleError, event, "제목을 입력하세요!");
+    let b = err(deadline, deadlineError, event, "모집마감일을 입력하세요!");
+    let c = err(startDate, startDateError, event, "여행시작일을 입력하세요!");
+    let d = err(endDate, endDateError, event, "여행종료일을 입력하세요!");
+    let e = err(theme, themeError, event, "테마를 선택하세요!");
+    let f = err(region, regionError, event, "지역을 선택하세요!");
+    let sum = a+b+c+d+e+f;
+    if(sum == 6){
+      updateRecruit([[${board.recruitBoardId}]]);
+    }
+  });
+
+  function updateRecruit(recruitBoardId) {
+    var reply = confirm("수정하시겠습니까?");
+
+    if (reply) {
+
+      const recruitBoard = prepareRecruitBoard(); // 현재 페이지의 정보를 담은 객체를 리턴하는 함수
+
+      $.ajax({
+        url: "update",
+        type: "POST",
+        data: JSON.stringify(recruitBoard), // 데이터의 포맷을 json으로 하여 요청.
+        processData: false,
+        contentType: 'application/json', // 데이터의 포맷을 json으로 하여 요청.
+      })
+      .done(function(response) {
+        if (response == 1) {
+          alert("수정되었습니다");
+          window.location.href = '/recruit/view?recruitBoardId=' + recruitBoardId;
+        } else {
+          alert("에러");
+          window.location.href = '/recruit/view?recruitBoardId=' + recruitBoardId;
+        }
+      })
+    }
+  }
+
+  /* 현재 페이지의 정보를 담은 객체를 리턴하는 함수 */
+  function prepareRecruitBoard() {
+
+    const radioButtons = document.querySelectorAll('input[name="state"]');
+    let selectedValue;
+    // 각 라디오 버튼의 checked 상태 확인
+    radioButtons.forEach(radio => {
+      if (radio.checked) {
+        // 선택된 라디오 버튼의 값을 변수에 저장
+        selectedValue = radio.value;
+      }
+    });
+
+    var address = document.getElementById('addr').value;
+    theme = {
+    themeId: document.getElementById('themeId').value
+    };
+    region = {
+    regionId: document.getElementById('regionId').value
+    };
+
+    const recruitBoard = {
+    recruitBoardId: document.getElementById('recruitBoardId').value,
+    title: document.getElementById('title').value,
+    state: selectedValue,
+    content: document.getElementById('summernote').value,
+    deadline: document.getElementById('deadline').value,
+    startDate: document.getElementById('startDate').value,
+    endDate: document.getElementById('endDate').value,
+    recruitTotal: document.getElementById('recruitTotal').value,
+    address: address,
+    theme: theme,
+    region: region,
+    latitude: document.getElementById('latitude').value,
+    longitude: document.getElementById('longitude').value
+    };
+
+    return recruitBoard;
+  }
+</script>
+
+</body>
+
+<div data-th-replace="footer :: footer">꼬리말</div>
+
+</html>

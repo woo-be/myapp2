@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.moyeo.dao.ReviewLikeDao">
+
+  <insert id="add" parameterType="int">
+    insert into review_like(member_id, review_board_id) values(#{memberId},#{reviewBoardId});
+  </insert>
+
+  <delete id="deleteAll" parameterType="int">
+    delete from review_like
+    where review_board_id=#{value}
+  </delete>
+
+  <select id="checked" parameterType="int" resultType="int">
+    select count(*) from review_like where member_id=#{memberId} and review_board_id=#{reviewBoardId}
+  </select>
+
+</mapper>
