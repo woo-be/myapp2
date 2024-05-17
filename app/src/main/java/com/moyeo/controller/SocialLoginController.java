@@ -38,7 +38,7 @@ public class SocialLoginController {
   @PostMapping("/auth/login/google")
   public void loginUrlGoogle(HttpServletResponse response) throws IOException {
     String reqUrl = "https://accounts.google.com/o/oauth2/v2/auth?client_id=" + googleClientId
-        + "&redirect_uri=http://localhost:8888/api/v1/oauth2/google&response_type=code&scope=email%20profile%20openid&access_type=offline";
+        + "&redirect_uri=http://175.106.97.212:81/api/v1/oauth2/google&response_type=code&scope=email%20profile%20openid&access_type=offline";
     response.sendRedirect(reqUrl);
   }
 
