@@ -81,7 +81,7 @@ public class SocialLoginController {
         .clientId(googleClientId)
         .clientSecret(googleClientPw)
         .code(authCode)
-        .redirectUri("http://localhost:8888/api/v1/oauth2/google")
+        .redirectUri("http://175.106.97.212:81/api/v1/oauth2/google")
         .grantType("authorization_code").build();
     ResponseEntity<GoogleResponse> resultEntity = restTemplate.postForEntity(
         "https://oauth2.googleapis.com/token",
